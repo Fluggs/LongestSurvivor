@@ -18,7 +18,7 @@ public class Tick implements Runnable {
 		ArrayList<PlayerTime> playerList = this.instance.playerList;
 		ArrayList<PlayerDeathEvent> deathList = this.instance.deathList;
 		ReentrantLock deathListLock = this.instance.deathListLock;
-		this.instance.messenger.log("Running tick()");
+		this.instance.messenger.debug("Running tick()");
 		
 		// Process logins
 		for (Player player : Bukkit.getServer().getOnlinePlayers()) {
@@ -38,7 +38,7 @@ public class Tick implements Runnable {
 		// Process deaths
 		deathListLock.lock();
 		for (PlayerDeathEvent death : deathList) {
-			this.instance.messenger.log("Processing a death");
+			this.instance.messenger.debug("Processing a death");
 			Boolean found = false;
 			for (PlayerTime pt : playerList) {
 				if (pt.player == death.getEntity()) {

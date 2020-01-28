@@ -73,13 +73,13 @@ public class PlayerTime {
 		// existing player
 		if (fileExisted) {
 			if (!yaml.isSet(counterPath)) {
-				Bukkit.getServer().getConsoleSender().sendMessage("ERROR: Deathtime: survivaltime not found in yaml");
+				this.instance.messenger.error("ERROR: Deathtime: survivaltime not found in yaml");
 			}
 			else {
 				this.survivalTime = yaml.getLong(counterPath);
 			}
 			if (!yaml.isSet(isActivePath)) {
-				Bukkit.getServer().getConsoleSender().sendMessage("ERROR: Deathtime: isactive not found in yaml");
+				this.instance.messenger.error("ERROR: Deathtime: isactive not found in yaml");
 			}
 			else {
 				this.isActive = yaml.getBoolean(isActivePath);
@@ -101,9 +101,9 @@ public class PlayerTime {
 		yaml.set(isActivePath, this.isActive);
 		try {
 			yaml.save(pfile);
-			this.instance.messenger.log("Wrote player file: " + String.valueOf(survivalTime) + "; " + Boolean.valueOf(isActive));
+			this.instance.messenger.debug("Wrote player file: " + String.valueOf(survivalTime) + "; " + Boolean.valueOf(isActive));
 		} catch (IOException e) {
-			this.instance.messenger.log("Error on writing player file");
+			this.instance.messenger.error("Error on writing player file for player " + this.player.getName());
 			e.printStackTrace();
 		}
 	}
@@ -112,7 +112,7 @@ public class PlayerTime {
 	 * Adds one minute to the player if it is active and has not died yet. Also handles afk.
 	 */
 	public void tick() {
-		this.instance.messenger.log("Ticking player " + this.player.getName());
+		this.instance.messenger.debug("Ticking player " + this.player.getName());
 		if (!this.isActive) {
 			return;
 		}
@@ -124,7 +124,7 @@ public class PlayerTime {
 			
 			// afk
 			if (this.afkCtr <= 0) {
-				this.instance.messenger.log(this.player.getName() + " is afk.");
+				this.instance.messenger.debug(this.player.getName() + " is afk.");
 				this.afkCtr = 0;
 				return;
 			}
@@ -142,18 +142,23 @@ public class PlayerTime {
 	 * Processes a death event.
 	 * Determines whether event was a death event that counts. Used to exclude player kills and inform the players.
 	 * @param event
-	 * @return true if the death should count, false if not
+	 * @return true if the death results in a dq, false if not
 	 */
 	public Boolean death(PlayerDeathEvent event) {
 		assert event.getEntity() == this.player;
 		
-		// Do not count kills
-		if (this.config.ignorePlayerKills && player.getKiller() instanceof Player) {
-			this.instance.messenger.log("Ignoring playerkill on " + this.player.getName());
+		if (!this.isActive) {
+			this.instance.messenger.debug("Ignoring death of inactive player " + this.player.getName());
 			return false;
 		}
 		
-		this.instance.messenger.log("Killing " + this.player.getName());
+		// Do not count kills
+		if (this.config.ignorePlayerKills && player.getKiller() instanceof Player) {
+			this.instance.messenger.debug("Ignoring playerkill on " + this.player.getName());
+			return false;
+		}
+		
+		this.instance.messenger.debug("Killing " + this.player.getName());
 		Messenger.disqualify(this);
 		this.isActive = false;
 		this.save();

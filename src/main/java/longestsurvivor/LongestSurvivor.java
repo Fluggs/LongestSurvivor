@@ -27,12 +27,12 @@ public class LongestSurvivor extends JavaPlugin implements Listener {
 	@Override
 	public void onEnable() {
 		this.messenger = new Messenger(this);
-		this.messenger.log("Loading LongestSurvivor ...");
+		this.messenger.debug("Loading LongestSurvivor ...");
 		this.saveDefaultConfig();
 		try {
 			this.config = new Config(this);
 		} catch (Exception e) {
-			this.messenger.log("LongestSurvivor: Failed to read config");
+			this.messenger.debug("LongestSurvivor: Failed to read config");
 			e.printStackTrace();
 			this.getServer().getPluginManager().disablePlugin(this);
 		}
@@ -40,9 +40,9 @@ public class LongestSurvivor extends JavaPlugin implements Listener {
 		for (Player player : Bukkit.getServer().getOnlinePlayers()) {
 		    playerList.add(new PlayerTime(this, player));
 		}
-		this.messenger.log("Scheduling ticker ...");
+		this.messenger.debug("Scheduling ticker ...");
 		Bukkit.getServer().getScheduler().runTaskTimer(this, new Tick(this), 20*60L, 20*60L);
-		this.messenger.log("LongestSurvivor loaded");
+		this.messenger.debug("LongestSurvivor loaded");
 	}
 	
 	@Override
