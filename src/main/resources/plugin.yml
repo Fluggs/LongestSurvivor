@@ -1,3 +1,16 @@
 name: LongestSurvivor
 main: longestsurvivor.LongestSurvivor
-version: 0.0.1
+version: 0.1.2
+commands:
+  lsreset:
+    description: Resets the survivor timer for all players
+    usage: /lsreset
+    permission: longestsurvivor.reset
+    permission-message: You don't have the permission to reset the survivor timer.
+  lsscore:
+    description: Gets the current Highscore
+    usage: /lsscore
+permissions:
+  longestsurvivor.reset:
+   description: Allows reset command
+   default: op

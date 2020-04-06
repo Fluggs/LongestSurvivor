@@ -2,15 +2,15 @@ package longestsurvivor;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Comparator;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
-
-import longestsurvivor.LongestSurvivor;
 
 
 /**
@@ -19,6 +19,8 @@ import longestsurvivor.LongestSurvivor;
  *
  */
 public class PlayerTime {
+	public static final String pfileDir = "/playerData";
+	
 	private LongestSurvivor instance;
 	private File pfile;
 	private YamlConfiguration yaml;
@@ -31,8 +33,9 @@ public class PlayerTime {
 	public Player player;
 	
 	//inside yaml
-	private String counterPath = "survivaltime";
-	private String isActivePath = "isactive";
+	private static String counterPath = "survivaltime";
+	private static String isActivePath = "isactive";
+	private static String namePath = "name";
 	
 	public PlayerTime(LongestSurvivor instance, Player p) {
 		this.instance = instance;
@@ -48,7 +51,7 @@ public class PlayerTime {
 		}
 		
 		// setup player file
-		this.pfile = new File(instance.getDataFolder() + "/playerData", p.getUniqueId() + ".yml");
+		this.pfile = new File(instance.getDataFolder() + pfileDir, p.getUniqueId() + ".yml");
 		Boolean fileExisted = true;
 
 		if (!pfile.exists()) {
@@ -97,6 +100,7 @@ public class PlayerTime {
 	 * Updates the playertime yml.
 	 */
 	public void save() {
+		yaml.set(namePath, this.player.getName());
 		yaml.set(counterPath, this.survivalTime);
 		yaml.set(isActivePath, this.isActive);
 		try {
@@ -163,5 +167,59 @@ public class PlayerTime {
 		this.isActive = false;
 		this.save();
 		return true;
+	}
+	
+	/**
+	 * Sets the player to inactive to reset players timer on next reconnect
+	 */
+	public void resetPlayer() {
+		this.isActive = false;
+	}
+	
+	/**
+	 * Removes all player files to reset the timer on next reconnect.
+	 * @param instance
+	 */
+	public static void resetAllPlayers(LongestSurvivor instance) {
+		instance.messenger.debug("Removing all player files");
+		File playerdir = new File(instance.getDataFolder() + pfileDir);
+		for (File pf : playerdir.listFiles())
+			pf.delete();
+	}
+	
+	/**
+	 * Returns all player scores
+	 * @param instance
+	 * @return all playerscores as name, counter value and isActive 
+	 */
+	public static Triplet<String, Long, Boolean>[] getScores(LongestSurvivor instance) {
+		instance.messenger.debug("Removing all player files");
+		File playerdir = new File(instance.getDataFolder() + pfileDir);
+		File[] filelist = playerdir.listFiles();
+		@SuppressWarnings("unchecked")
+		Triplet<String, Long, Boolean>[] scores = // crappy java
+				(Triplet<String, Long, Boolean>[]) Array.newInstance(Triplet.class, filelist.length);
+		
+		for (int i = 0; i < filelist.length; i++) {
+			File pf = filelist[i];
+			String playername = "";
+			long timerValue = 0;
+			boolean isPlayerActive = false;
+			
+			YamlConfiguration config = YamlConfiguration.loadConfiguration(pf);
+			if(config.isSet(namePath))
+				playername = config.getString(namePath);
+			if (config.isSet(counterPath))
+				timerValue = config.getLong(counterPath);
+			if (config.isSet(isActivePath))
+				isPlayerActive = config.getBoolean(isActivePath);
+			
+			if(!playername.isBlank())
+				scores[i] = new Triplet<String, Long, Boolean>(playername, timerValue, isPlayerActive);
+		}
+		
+		Arrays.sort(scores, Comparator.comparing(Triplet<String, Long, Boolean>::getSecond).reversed());
+		
+		return scores;
 	}
 }
