@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import longestsurvivor.PlayerTime;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -42,6 +42,9 @@ public class LongestSurvivor extends JavaPlugin implements Listener {
 		}
 		this.messenger.debug("Scheduling ticker ...");
 		Bukkit.getServer().getScheduler().runTaskTimer(this, new Tick(this), 20*60L, 20*60L);
+		
+		
+		
 		this.messenger.debug("LongestSurvivor loaded");
 	}
 	
@@ -69,4 +72,23 @@ public class LongestSurvivor extends JavaPlugin implements Listener {
 			this.deathListLock.unlock();
 		}
 	}
+	
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if(command.getName().equalsIgnoreCase("lsreset")) {
+			PlayerTime.resetAllPlayers(this);
+			
+			for (PlayerTime pt : playerList) {
+				pt.resetPlayer();
+			}
+        	return true;
+        }
+        
+        else if(command.getName().equalsIgnoreCase("lsscore")) {
+			Triplet<String, Long, Boolean>[] scores = PlayerTime.getScores(this);
+			Messenger.sendScores(sender, scores);
+			return true;
+        }
+        return false;
+    }
 }
