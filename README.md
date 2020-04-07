@@ -3,5 +3,4 @@ Bukkit plugin that implements a competition of who survives the longest without 
 
 # Feature ideas
 * Separate scores per world group
-* Permissions for reset cmd
 * Ceremonial winner broadcast
